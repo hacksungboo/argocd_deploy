@@ -10,7 +10,7 @@ spec:
     # AWS EBS gp3는 성능 보장을 위해 보통 10Gi 이상을 할당합니다.
     size: 2Gi 
     # 테라폼으로 만든 EBS 클래스 이름을 적습니다!
-    storageClass: ebs-gp3-retain 
+    storageClass: ebs-gp3
 
   bootstrap:
     initdb:
