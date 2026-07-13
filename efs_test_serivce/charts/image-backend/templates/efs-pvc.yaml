@@ -2,11 +2,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: efs-claim           # 이름을 Deployment에서 호출할 겁니다.
+  name: efs-claim           # 이름을 deploy.yaml에서 호출할 예정
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: efs-sc
+  storageClassName: efs-sc # storage class name 일치시키기
   resources:
     requests:
       storage: 5Gi          # PV에 적은 용량과 똑같이 맞춰줍니다.

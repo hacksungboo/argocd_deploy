@@ -1,0 +1,17 @@
+# efs-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: efs-pv
+spec:
+  capacity:
+    storage: 5Gi # 형식상 넣어준다 (크기는 동적으로 구성)
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany # 여러 (many) 개의 파드가 동시에 접근해서 사용할수 있도록 설정
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: efs-sc
+  # Container Storage Interface 설정
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: "fs-083f4ec45065faa93" # efs 프로비저닝 후, file sytem id 값 넣어준다

@@ -68,6 +68,7 @@ def upload_image(file: UploadFile = File(...)):
     # 1. 파일명 중복 방지를 위한 UUID 생성
     file_extension = file.filename.split(".")[-1]
     saved_filename = f"{uuid.uuid4().hex}.{file_extension}"
+    # 전체 파일 업로드 경로
     file_path = os.path.join(EFS_MOUNT_PATH, saved_filename)
     
     # 2. EFS 마운트 경로에 실제 파일 저장
@@ -82,6 +83,7 @@ def upload_image(file: UploadFile = File(...)):
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute(
+            # 테이블에 원본 파일명, 저장된 파일명 따로 관리
             "INSERT INTO image_info (original_name, saved_name) VALUES (%s, %s) RETURNING *;",
             (file.filename, saved_filename)
         )

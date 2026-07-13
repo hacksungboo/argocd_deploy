@@ -2,7 +2,7 @@
 
 ingressRule:
   namespace: "default"
-  host: "cloud-learning.site"
+  host: "ccmall.shop"
 
 image-frontend:
   replicaCount: 2
