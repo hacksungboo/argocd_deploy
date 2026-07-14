@@ -1,3 +1,5 @@
+# image-backend/src/main.py
+
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -14,7 +16,7 @@ WRITABLE_URL = os.getenv("WRITABLE_URL", "postgresql://scott:tiger@localhost:543
 READONLY_URL = os.getenv("READONLY_URL", "postgresql://scott:tiger@localhost:5433/scott_db")
 
 # K8s에서 EFS가 마운트될 경로 (미리 폴더가 있어야 함)
-EFS_MOUNT_PATH = os.getenv("EFS_MOUNT_PATH", "C:/개발자가 설정한 경로")
+EFS_MOUNT_PATH = os.getenv("EFS_MOUNT_PATH", "/mnt/efs/images")
 # exist_ok=True "있으면 그냥 넘어가라"
 os.makedirs(EFS_MOUNT_PATH, exist_ok=True)
 
@@ -68,7 +70,7 @@ def upload_image(file: UploadFile = File(...)):
     # 1. 파일명 중복 방지를 위한 UUID 생성
     file_extension = file.filename.split(".")[-1]
     saved_filename = f"{uuid.uuid4().hex}.{file_extension}"
-    # 전체 파일 업로드 경로
+    # 전체 파일 업로드 경로 
     file_path = os.path.join(EFS_MOUNT_PATH, saved_filename)
     
     # 2. EFS 마운트 경로에 실제 파일 저장
@@ -83,7 +85,7 @@ def upload_image(file: UploadFile = File(...)):
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute(
-            # 테이블에 원본 파일명, 저장된 파일명 따로 관리
+            # 테이블에 원본 파일명, 저장된 파일명을 저장해서 관리한다.
             "INSERT INTO image_info (original_name, saved_name) VALUES (%s, %s) RETURNING *;",
             (file.filename, saved_filename)
         )
@@ -108,18 +110,20 @@ def get_image(img_id: int):
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
+        # img_id 에 해당하는 이미지가 어떤 파일명으로 저장되었는지 select 한다 
         cursor.execute("SELECT saved_name FROM image_info WHERE img_id = %s;", (img_id,))
         row = cursor.fetchone()
         
         if not row:
             raise HTTPException(status_code=404, detail="Image not found in DB")
-            
+        # 해당 이미지 data 를 읽어올수 있는 전체 경로를 구성해서     
         file_path = os.path.join(EFS_MOUNT_PATH, row["saved_name"])
         
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="File not found in EFS storage")
             
         # FileResponse를 사용하면 FastAPI가 Content-Type을 이미지로 자동 설정하여 반환합니다.
+        # 이미지 data 를 응답한다 
         return FileResponse(file_path)
         
     except HTTPException:
